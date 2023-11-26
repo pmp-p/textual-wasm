@@ -3,7 +3,7 @@ A class to manage concurrent [work](/guide/workers).
 """
 
 from __future__ import annotations
-
+import sys
 import asyncio
 import enum
 import inspect
@@ -163,7 +163,10 @@ class Worker(Generic[ResultType]):
         self.group = group
         self.description = description
         self.exit_on_error = exit_on_error
-        self._thread_worker = thread
+        if sys.platform in ('emscripten','wasi'):
+            self._thread_worker = False
+        else:
+            self._thread_worker = thread
         self._state = WorkerState.PENDING
         self.state = self._state
         self._error: BaseException | None = None
@@ -333,6 +336,8 @@ class Worker(Generic[ResultType]):
         elif inspect.isawaitable(self._work):
             return await self._work
         elif callable(self._work):
+            if not self._thread_worker:
+                return self._work()
             raise WorkerError("Request to run a non-async function as an async worker")
         raise WorkerError("Unsupported attempt to run an async worker")
 
