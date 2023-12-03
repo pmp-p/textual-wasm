@@ -479,7 +479,9 @@ class App(Generic[ReturnType], DOMNode):
         self.stylesheet = Stylesheet(variables=self.get_css_variables())
 
         css_path = css_path or self.CSS_PATH
-
+        if not css_path:
+            css_path = '/tmp/default.tcss'
+            open(css_path,'w').close()
         css_paths = []
         try:
             css_paths.append(_make_path_object_relative(css_path, self))
