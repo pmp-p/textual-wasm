@@ -503,12 +503,20 @@ class App(Generic[ReturnType], DOMNode):
         self.stylesheet = Stylesheet(variables=self.get_css_variables())
 
         css_path = css_path or self.CSS_PATH
-        css_paths = [
-            _make_path_object_relative(css_path, self)
-            for css_path in (
-                _css_path_type_as_list(css_path) if css_path is not None else []
-            )
-        ]
+        if not css_path:
+            css_path = '/tmp/default.tcss'
+            open(css_path,'w').close()
+        css_paths = []
+        try:
+            css_paths.append(_make_path_object_relative(css_path, self))
+        except OSError:
+            pass
+        for css_path in _css_path_type_as_list(css_path):
+            if css_path is not None:
+                css_paths.append(css_path)
+            else:
+                css_path.append([])
+
         self.css_path = css_paths
 
         self._registry: WeakSet[DOMNode] = WeakSet()
